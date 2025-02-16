@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Affable Bag</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/of4.1.1/animate.min.css">
+    <style>
+        :root {
+            --primary: #ff6b6b;
+            --secondary: #4ecdc4;
+            --dark: #2d3436;
+            --light: #f8f9fa;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Arial', sans-serif;
+            background: #1a1a1a;
+            color: var(--light);
+            overflow-x: hidden;
+        }
+
+        /* Logo */
+        .logo-container {
+            position: fixed;
+            object-fit: contain; 
+            top: -3%;
+            left: 50%;
+            height: 0.5%;
+            transform: translateX(-50%);
+            z-index: 10;
+            text-align: center;
+           
+            
+            
+        }
+
+        .logo {
+            width: min(10px, 50vmin)
+            margin: 0 auto;
+            display: block;
+            transition: 0.3s all ease;
+            border-radius: 10 px;
+            height: 5 px;
+            width: 10px;
+            
+        }
+
+        /* Star Animations */
+        .star {
+            position: fixed;
+            width: 2px;
+            height: 2px;
+            background: rgba(255,255,255,0.8);
+            pointer-events: none;
+            animation: twinkle var(--duration) linear infinite;
+            border-radius: 50%;
+            filter: blur(0.5px);
+            z-index: -1;
+        }
+
+        @keyframes twinkle {
+            0% { opacity: 0; transform: scale(1); }
+            50% { opacity: 1; transform: scale(1.5); }
+            100% { opacity: 0; transform: scale(1); }
+        }
+
+        /* Main Content */
+        .container {
+            padding-top: 140px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .category-selector {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .category-buttons button {
+            margin: 10px;
+            padding: 12px 24px;
+            border-radius: 30px;
+            background: var(--primary);
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: 0.3s all ease;
+        }
+
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 2rem;
+            padding: 1rem;
+        }
+
+        .product-card {
+            background: #2d2d2d;
+            border-radius: 15px;
+            padding: 1rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            transition: 0.3s all ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .product-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .add-to-bag {
+            background: var(--secondary);
+            color: white;
+            border: none;
+            padding: 0.8rem 1.5rem;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: 0.3s all ease;
+            display: block;
+            margin: 1rem auto 0;
+        }
+
+        .bag-summary {
+            positon: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            background: var(--light);
+            color: var(--dark);
+            padding: 1rem 1.5rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+            cursor: pointer;
+            z-index: 999;
+            display: flex;
+            gap: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1001;
+        }
+
+        .modal-content {
+            background: #2d2d2d;
+            max-width: 500px;
+            margin: 2rem auto;
+            padding: 2rem;
+            border-radius: 15px;
+            position: relative;
+        }
+
+        #bagItems {
+            max-height: 60vh;
+            overflow-y: auto;
+            margin: 1rem 0;
+        }
+
+        .bag-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: #3d3d3d;
+            border-radius: 10px;
+            margin-bottom: 1rem;
+        }
+
+        .confirmation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            display: none;
+            justify-content: center;
+            align-items: center;
+            z-index: 1002;
+        }
+
+        .final-message {
+            text-align: center;
+            color: white;
+            padding: 2rem;
+            background: #2d2d2d;
+            border-radius: 15px;
+            animation: zoomIn 0.5s ease;
+        }
+
+        @keyframes zoomIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        form input, form textarea {
+            width: 100%;
+            padding: 0.8rem;
+            margin: 0.5rem 0;
+            border-radius: 8px;
+            border: 1px solid #444;
+            background: #3d3d3d;
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo -->
+    <div class="logo-container">
+        <img src="  https://media.discordapp.net/attachments/1200010696709132349/1334909478411178074/IMG_20250130_202927-transformed_enhanced.jpeg?ex=679e3ed5&is=679ced55&hm=bfd1c9c6efc85374e28e959b002fb7ec7c976e146c36acf239933cee1a454d9b&=&format=webp&width=550&height=125" logo" alt= "affable bag">
+    </div>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="category-selector">
+            <h1 class="animate__animated animate__fadeIn">
+                
+                Select any type of product you like.</h1> <br>
+            <h5> tap 🛍️ at bottom to make an ordre and also to remove product from bag </h5>
+            <div class="category-buttons" style="margin-top: 2rem;">
+                <button class="category-btn" data-category="rings">Rings</button>
+                <button class="category-btn" data-category="earrings">Earrings</button>
+                <button class="category-btn" data-category="wristbands">Wristbands</button>
+                <button class="category-btn" data-category="necklaces">Necklaces</button>
+            </div>
+        </div>
+        <div class="products-grid" id="productsContainer"></div>
+    </div>
+
+    <!-- Bag Summary -->
+    <div class="bag-summary" id="bagSummary">
+        <span>🛍️ Items: <span id="totalItems">0</span></span>
+        <span>Total: NPR <span id="totalPrice">0</span></span>
+    </div>
+
+    <!-- Bag Modal -->
+    <div class="modal" id="bagModal">
+        <div class="modal-content">
+            <h2>Your Shopping Bag</h2>
+            <div id="bagItems"></div>
+            <button id="makeOrder" style="display: none; background: var(--primary);">Make Order</button>
+            <button onclick="closeBag()" style="background: var(--secondary);">Continue Shopping</button>
+        </div>
+    </div>
+
+    <!-- Order Form -->
+    <div class="modal" id="orderModal">
+        <div class="modal-content">
+            <h2>Order Information</h2>
+            <form id="orderForm">
+                <input type="text" placeholder="Full Name" required>
+                <input type="email" placeholder="Email Address" required>
+                <input type="tel" placeholder="Phone Number" required>
+                <textarea placeholder="Shipping Address" required rows="4"></textarea>
+                <button type="submit" style="background: var(--primary); margin-top: 1rem;">Submit Order</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Overlay -->
+    <div class="confirmation-overlay" id="confirmationOverlay">
+        <div class="final-message">
+            <h2>Thank you for your order! 🎉</h2>
+            <p>We will reach out to you soon</p>
+            <div class="loading-dots">
+                <div class="dot"></div>
+                <div class="dot"></div>
+                <div class="dot"></div>
+            </div>
+        </div>
+    </div>
+
+<script>
+// Star Animation
+function createStars() {
+    const colors = ['#ffffff', '#ffdddd', '#ddf4ff', '#fffedd'];
+    for (let i = 0; i < 150; i++) {
+        const star = document.createElement('div');
+        star.className = 'star';
+        star.style.left = Math.random() * 100 + 'vw';
+        star.style.top = Math.random() * 100 + 'vh';
+        star.style.background = colors[Math.floor(Math.random() * colors.length)];
+        star.style.setProperty('--duration', Math.random() * 3 + 2 + 's');
+        document.body.appendChild(star);
+    }
+}
+createStars();
+
+// Product Data
+const products = {
+    rings: [
+        { image: 'https://i.pinimg.com/236x/20/59/51/20595145e70c9e7d973748e2570fde3b.jpg', name: 'Diamond Solitaire Ring', price: 250 },
+        { image: 'images/rings/2.jpg', name: 'Gold Band Ring', price: 180 },
+        { image: 'images/rings/3.jpg', name: 'Silver Celtic Ring', price: 15000 },
+        { image: 'images/rings/4.jpg', name: 'Platinum Wedding Ring', price: 350 },
+        { image: 'images/rings/5.jpg', name: 'Rose Gold Stacking Ring', price: 100 }
+    ],
+    earrings: [
+        { image: 'images/earrings/1.jpg', name: 'Pearl Drop Earrings', price: 800 },
+        { image: 'images/earrings/2.jpg', name: 'Gold Hoop Earrings', price: 150 },
+        { image: 'images/earrings/3.jpg', name: 'Diamond Stud Earrings', price: 280 },
+        { image: 'images/earrings/4.jpg', name: 'Silver Chandelier Earrings', price: 120 },
+        { image: 'images/earrings/5.jpg', name: 'Huggie Earrings', price: 900 }
+    ],
+    wristbands: [
+        { image: 'images/wristbands/1.jpg', name: 'Leather Wrap Bracelet', price: 5000 },
+        { image: 'images/wristbands/2.jpg', name: 'Silver Chain Bracelet', price: 15000 },
+        { image: 'images/wristbands/3.jpg', name: 'Beaded Friendship Band', price: 3000 },
+        { image: 'images/wristbands/4.jpg', name: 'Gold Tennis Bracelet', price: 45000 },
+        { image: 'images/wristbands/5.jpg', name: 'Charm Bracelet', price: 18000 }
+    ],
+    necklaces: [
+        { image: 'images/necklaces/1.jpg', name: 'Diamond Pendant Necklace', price: 55000 },
+        { image: 'images/necklaces/2.jpg', name: 'Gold Chain Necklace', price: 25000 },
+        { image: 'images/necklaces/3.jpg', name: 'Silver Locket Necklace', price: 12000 },
+        { image: 'images/necklaces/4.jpg', name: 'Pearl Strand Necklace', price: 18000 },
+        { image: 'images/necklaces/5.jpg', name: 'Gemstone Choker', price: 22000 }
+    ]
+};
+
+let bag = [];
+const MAX_ITEMS = 20;
+
+// Product Display
+document.querySelectorAll('.category-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        showProducts(btn.dataset.category);
+    });
+});
+
+function showProducts(category) {
+    const productsHTML = products[category].map(product => `
+        <div class="product-card animate__animated animate__fadeIn">
+            <img src="${product.image}" 
+                 alt="${product.name}" 
+                 style="width:100%; border-radius: 10px; height: 200px; object-fit: cover;">
+            <h3 style="margin: 1rem 0;">${product.name}</h3>
+            <p style="color: var(--secondary);">NPR ${product.price.toLocaleString()}</p>
+            <button class="add-to-bag" onclick="addToBag(${JSON.stringify(product).replace(/"/g, '&quot;')})">
+                Add to Bag
+            </button>
+        </div>
+    `).join('');
+    document.getElementById('productsContainer').innerHTML = productsHTML;
+}
+
+// Bag Functionality
+function addToBag(product) {
+    if (bag.length >= MAX_ITEMS) {
+        showMessage('❗ You can only add 20 items maximum');
+        return;
+    }
+    bag.push(product);
+    updateBagUI();
+    showMessage('✔️ Added to bag');
+}
+
+function updateBagUI() {
+    document.getElementById('totalItems').textContent = bag.length;
+    document.getElementById('totalPrice').textContent = 
+        bag.reduce((sum, item) => sum + item.price, 0).toLocaleString();
+    document.getElementById('makeOrder').style.display = bag.length > 0 ? 'block' : 'none';
+}
+
+document.getElementById('bagSummary').addEventListener('click', showBagModal);
+
+function showBagModal() {
+    document.getElementById('bagModal').style.display = 'block';
+    showBagItems();
+}
+
+function showBagItems() {
+    const bagHTML = bag.map((item, index) => `
+        <div class="bag-item">
+            <img src="${item.image}" width="60" style="border-radius: 8px;">
+            <div style="flex: 1;">
+                <h4>${item.name}</h4>
+                <p>NPR ${item.price.toLocaleString()}</p>
+            </div>
+            <button onclick="removeItem(${index})" 
+                    style="background: #ff4d4d; padding: 5px 10px; border-radius: 5px;">
+                Remove
+            </button>
+        </div>
+    `).join('');
+    document.getElementById('bagItems').innerHTML = bagHTML || '<p>Your bag is empty</p>';
+}
+
+function removeItem(index) {
+    bag.splice(index, 1);
+    showBagItems();
+    updateBagUI();
+}
+
+function closeBag() {
+    document.getElementById('bagModal').style.display = 'none';
+}
+
+// Order System
+document.getElementById('makeOrder').addEventListener('click', () => {
+    document.getElementById('bagModal').style.display = 'none';
+    document.getElementById('orderModal').style.display = 'block';
+});
+
+document.getElementById('orderForm').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    try {
+        document.getElementById('confirmationOverlay').style.display = 'flex';
+        await sendOrderEmail();
+        showConfirmation();
+    } catch (error) {
+        showMessage(`❌ Error: ${error.message}`);
+        console.error('Error:', error);
+    } finally {
+        document.getElementById('confirmationOverlay').style.display = 'none';
+    }
+});
+
+// EmailJS Integration
+function sendOrderEmail() {
+    return new Promise((resolve, reject) => {
+        const formData = {
+            name: document.querySelector('#orderForm input[type="text"]').value,
+            email: document.querySelector('#orderForm input[type="email"]').value,
+            phone: document.querySelector('#orderForm input[type="tel"]').value,
+            address: document.querySelector('#orderForm textarea').value,
+            items: JSON.stringify(bag.map(item => `${item.name} (NPR ${item.price})`)),
+            total: bag.reduce((sum, item) => sum + item.price, 0)
+        };
+
+        emailjs.send('service_86r954p', 'template_st05y7p', formData)
+            .then(resolve)
+            .catch(error => reject(new Error(error.text || 'Failed to send order')));
+    });
+}
+
+function showConfirmation() {
+    const overlay = document.getElementById('confirmationOverlay');
+    overlay.style.display = 'flex';
+    setTimeout(() => {
+        bag = [];
+        updateBagUI();
+        overlay.style.display = 'none';
+        window.location.reload(true);
+    }, 5000);
+}
+
+// UI Helpers
+function showMessage(text) {
+    const msg = document.createElement('div');
+    msg.textContent = text;
+    msg.style.position = 'fixed';
+    msg.style.top = '20px';
+    msg.style.left = '50%';
+    msg.style.transform = 'translateX(-50%)';
+    msg.style.padding = '15px 30px';
+    msg.style.background = '#2d2d2d';
+    msg.style.color = 'white';
+    msg.style.borderRadius = '30px';
+    msg.style.boxShadow = '0 3px 10px rgba(0,0,0,0.3)';
+    msg.style.zIndex = '1002';
+    document.body.appendChild(msg);
+    setTimeout(() => msg.remove(), 3000);
+}
+</script>
+
+<!-- EmailJS Integration -->
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+<script>
+    (function() {
+        emailjs.init('xLowAPpN3VKU_nppq');
+    })();
+</script>
+
+</body>
+</html>
